@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os/user"
+
+	"github.com/atotto/clipboard"
 )
 
 func main() {
@@ -38,7 +40,7 @@ func main() {
 	q.setSecretKey(*secretKey)
 
 	isNeedDeleteTempFile := false
-	if *uploadFilePath == "" {
+	if *uploadFilePath == "" && *uploadFIleHTTPURL != "" {
 		*uploadFilePath, err = genUploadFilePathFormURL(*uploadFIleHTTPURL)
 		if nil != err {
 			log.Fatalf("Generate upload file path is error: %v\n", err)
@@ -55,5 +57,11 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Printf("Upload file is success, the http URL is %s\n", httpURL)
+	if httpURL != "" {
+		err = clipboard.WriteAll(httpURL)
+		if nil != err {
+			log.Fatalf("Copy file url to clipboard is error: %v\n", err)
+		}
+	}
+	fmt.Printf("Upload file is success, the http URL is %s\nThe file url is in your clipboard\n", httpURL)
 }

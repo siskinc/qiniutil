@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
 
