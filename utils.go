@@ -1,10 +1,13 @@
 package main
 
 import (
+	"log"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/qiniu/api.v7/storage"
 )
@@ -53,4 +56,33 @@ func getMd5(file io.Reader) string {
 	md5 := md5.New()
 	io.Copy(md5, file)
 	return hex.EncodeToString(md5.Sum(nil))
+}
+
+func checkURL(url string) bool {
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+		return true
+	}
+	return false
+}
+
+func genUploadFilePathFormURL(url string) (string, error) {
+	if !checkURL(url) {
+		return "", fmt.Errorf("URL is not valid")
+	}
+	index := strings.LastIndex(url, "/")
+	uploadFilePath := url[index+1:]
+	return uploadFilePath, nil
+}
+
+func deleteHTTPUploadTempFile(need bool, path string) {
+	if !need {
+		return
+	}
+	if !existsPath(path) {
+		return
+	}
+	err := os.RemoveAll(path)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

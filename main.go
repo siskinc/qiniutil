@@ -14,12 +14,14 @@ func main() {
 		homeDir = user.HomeDir
 	}
 	configFilePath := flag.String("config", fmt.Sprintf("%s/.qiniutilrc.json", homeDir), "config file path")
-	uploadFilePath := flag.String("file", "", "The paramater is upload file path")
-	accessKey := flag.String("access_key", "", "Qiniu Access Key")
-	secretKey := flag.String("secret_key", "", "Qiniu Secret Key")
+	uploadFilePath := flag.String("f", "", "The parameter is upload file path")
+	uploadFIleHTTPURL := flag.String("hf", "", "The parameter is http url of upload file")
+	accessKey := flag.String("ak", "", "Qiniu Access Key")
+	secretKey := flag.String("sk", "", "Qiniu Secret Key")
 	key := flag.String("key", "", "file key")
 
 	flag.Parse()
+
 	c := &configure{}
 	err = c.init(*configFilePath)
 	if err != nil {
@@ -34,6 +36,20 @@ func main() {
 
 	q.setAccessKey(*accessKey)
 	q.setSecretKey(*secretKey)
+
+	isNeedDeleteTempFile := false
+	if *uploadFilePath == "" {
+		*uploadFilePath, err = genUploadFilePathFormURL(*uploadFIleHTTPURL)
+		if nil != err {
+			log.Fatalf("Generate upload file path is error: %v\n", err)
+		}
+		err = downloadFile(*uploadFIleHTTPURL, *uploadFilePath)
+		if nil != err {
+			log.Fatalf("Download http file is error: %v\n", err)
+		}
+		isNeedDeleteTempFile = true
+	}
+	defer deleteHTTPUploadTempFile(isNeedDeleteTempFile, *uploadFilePath)
 
 	httpURL, err := q.uploadFile(*uploadFilePath, *key)
 	if err != nil {
